@@ -38,8 +38,9 @@ jobs:
           xcode_app=/Applications/Xcode_26.2.app
           test -d "$xcode_app"
           sudo xcode-select --switch "$xcode_app/Contents/Developer"
-          xcodebuild -version
-          xcodebuild -version | grep -Eq '^Xcode 26\.2([[:space:]]|$)'
+          xcode_version="$(xcodebuild -version)"
+          printf '%s\n' "$xcode_version"
+          [[ "$xcode_version" =~ ^Xcode\ 26\.2([[:space:]]|$) ]]
 
       - name: Install build tools
         run: brew install python xcodegen ripgrep pkgconf
