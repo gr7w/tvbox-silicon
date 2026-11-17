@@ -1,0 +1,71 @@
+name: Build iOS IPA
+
+on:
+  push:
+    branches: [touch-target-ios16]
+    paths:
+      - 'App/**'
+      - 'Sources/**'
+      - 'Packages/**'
+      - 'Runtime/**'
+      - 'Scripts/**'
+      - 'Vendor/**'
+      - 'project.yml'
+      - 'Package.swift'
+      - 'Package.resolved'
+      - '.github/workflows/build-ios-ipa.yml'
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: iOS build number
+        required: true
+        default: '2'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode 26.2
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcode_app=/Applications/Xcode_26.2.app
+          test -d "$xcode_app"
+          sudo xcode-select --switch "$xcode_app/Contents/Developer"
+          xcodebuild -version
+          xcodebuild -version | grep -Eq '^Xcode 26\.2([[:space:]]|$)'
+
+      - name: Install build tools
+        run: brew install python xcodegen ripgrep pkgconf
+
+      - name: Prepare AV3A source input
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/av3a-b44b532.tar.gz"
+          curl --fail --location --retry 3 \
+            'https://codeload.github.com/Dreamello/av3a/tar.gz/b44b5321862385a06ad6c427de5791e18f16c16b' \
+            --output "$archive"
+          echo '036d238f0e2bbeb43107a25e74dc5ab77b245aa5e8a8d06385df5def2f28dea0  '"$archive" | shasum -a 256 --check
+          python3 Scripts/prepare-ios-dependencies.py --av3a-archive "$archive"
+
+      - name: Build and validate unsigned IPA
+        env:
+          BUILD_NUMBER: ${{ github.event.inputs.build_number || '2' }}
+        run: python3 Scripts/build-ios-ipa.py --build-number "$BUILD_NUMBER"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Yingxia-iOS16.2-NoJava-unsigned
+          path: |
+            artifacts/latest/*.ipa
+            artifacts/latest/*.json
+          if-no-files-found: error
+          retention-days: 14

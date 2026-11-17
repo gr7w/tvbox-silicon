@@ -361,6 +361,8 @@ struct RootView: View {
         #else
         // Only the title changes, so the tab bar updates in place; VoiceOver still reads the name.
         Label { Text(phoneTabs && !showsTabLabels ? "" : item.title) } icon: { Image(systemName: item.icon) }
+            .frame(minWidth: 48, minHeight: 48)
+            .contentShape(Rectangle())
             .accessibilityLabel(item.title)
         #endif
     }
