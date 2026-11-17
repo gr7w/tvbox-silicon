@@ -28,5 +28,7 @@ __pycache__/
 DandanplayCredentials.plist
 dandanplay.json
 Vendor/*/sources/
+!Vendor/*/Sources/
+!Vendor/*/Sources/**
 Vendor/*/*.xcframework
 Vendor/AV3A/reference/
