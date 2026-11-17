@@ -1,0 +1,50 @@
+name: Build iOS dock fix
+on:
+  push:
+    branches: [fix/bottom-bar-hit-targets]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ios-dock-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: macos-15-intel
+    timeout-minutes: 330
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.1.app/Contents/Developer
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools
+        run: brew install python xcodegen ripgrep pkgconf
+      - name: Check toolchain and Swift syntax
+        run: |
+          xcodebuild -version
+          xcrun swiftc -frontend -parse App/LocalNavigation.swift
+      - name: Fetch pinned AV3A input
+        run: |
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/av3a.tar.gz" https://codeload.github.com/Dreamello/av3a/tar.gz/b44b5321862385a06ad6c427de5791e18f16c16b
+          echo "036d238f0e2bbeb43107a25e74dc5ab77b245aa5e8a8d06385df5def2f28dea0  $RUNNER_TEMP/av3a.tar.gz" | shasum -a 256 -c -
+      - name: Prepare native dependencies
+        run: python3 Scripts/prepare-ios-dependencies.py --av3a-archive "$RUNNER_TEMP/av3a.tar.gz"
+      - name: Build and validate unsigned IPA
+        run: python3 Scripts/build-ios-ipa.py --build-number 2 --jobs 3
+      - name: Upload validated IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Yingxia-1.8.13-build02-dock-fix
+          path: artifacts/latest/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload build diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-diagnostics
+          path: |
+            build/ipa/*.log
+            build/ipa/*.json
+          if-no-files-found: ignore
+          retention-days: 7

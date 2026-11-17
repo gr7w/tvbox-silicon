@@ -136,6 +136,7 @@ struct LocalAppNavigation: View {
                                 }
                                 .padding(.horizontal, LocalDockLayout.horizontalPadding)
                                 .padding(.top, LocalDockLayout.topPadding).padding(.bottom, LocalDockLayout.bottomPadding)
+                                .frame(width: viewport.size.width)
                                 .localDockHitRegions(frames: LocalDockLayout.touchFrames(containerWidth: viewport.size.width,
                                     showsMusic: store.music.showsStrip(videoPlaying: store.playing != nil)))
                                 .disabled(sourcePanelBlocksInput)
@@ -321,21 +322,25 @@ struct LocalAppNavigation: View {
 
     private func dock(availableWidth: CGFloat) -> some View {
         let metrics = LocalDockLayout.metrics(availableWidth: availableWidth)
+        // Assign the plate padding and inter-icon gaps to adjacent buttons, so
+        // the whole visible plate responds instead of leaving dead strips.
+        let mainHitWidth = metrics.buttonWidth + (3 * metrics.buttonSpacing + 2 * LocalDockLayout.groupPadding) / 4
+        let actionHitWidth = metrics.buttonWidth + (metrics.buttonSpacing + 2 * LocalDockLayout.groupPadding) / 2
         return HStack(spacing: metrics.groupSpacing) {
-            HStack(spacing: metrics.buttonSpacing) {
-                ForEach(entries) { entry in WithPerceptionTracking { dockButton(entry, width: metrics.buttonWidth) } }
+            HStack(spacing: 0) {
+                ForEach(entries) { entry in WithPerceptionTracking { dockButton(entry, width: metrics.buttonWidth, hitWidth: mainHitWidth) } }
             }
-                .padding(LocalDockLayout.groupPadding).localGlassSurface(cornerRadius: 29)
-            HStack(spacing: metrics.buttonSpacing) {
-                searchButton(width: metrics.buttonWidth)
-                pushButton(width: metrics.buttonWidth)
+                .localGlassSurface(cornerRadius: 29)
+            HStack(spacing: 0) {
+                searchButton(width: metrics.buttonWidth, hitWidth: actionHitWidth)
+                pushButton(width: metrics.buttonWidth, hitWidth: actionHitWidth)
             }
-            .padding(LocalDockLayout.groupPadding).localGlassSurface(cornerRadius: 29)
+            .localGlassSurface(cornerRadius: 29)
         }
         .frame(maxWidth: .infinity).frame(height: LocalDockLayout.dockHeight)
     }
 
-    private func dockButton(_ entry: AppSection, width: CGFloat) -> some View {
+    private func dockButton(_ entry: AppSection, width: CGFloat, hitWidth: CGFloat) -> some View {
         let selected = current == entry || entry == .home && (current == .sites || current == .python)
         let color = dockColor(entry)
         return Button {
@@ -348,6 +353,7 @@ struct LocalAppNavigation: View {
             .frame(width: width, height: LocalDockLayout.controlHeight)
             .foregroundStyle(selected ? color : .primary)
             .background(selected ? color.opacity(0.16) : .clear, in: Capsule())
+            .frame(width: hitWidth, height: LocalDockLayout.dockHeight)
             .contentShape(Rectangle())
         }.buttonStyle(.plain).accessibilityLabel(entry.title)
             .accessibilityAddTraits(selected ? .isSelected : [])
@@ -364,7 +370,7 @@ struct LocalAppNavigation: View {
         }
     }
 
-    private func searchButton(width: CGFloat) -> some View {
+    private func searchButton(width: CGFloat, hitWidth: CGFloat) -> some View {
         let selected = current == .search
         let color = dockColor(.search)
         return Button {
@@ -374,12 +380,13 @@ struct LocalAppNavigation: View {
                 .frame(width: width, height: LocalDockLayout.controlHeight)
                 .foregroundStyle(selected ? color : .primary)
                 .background(selected ? color.opacity(0.16) : .clear, in: Capsule())
+                .frame(width: hitWidth, height: LocalDockLayout.dockHeight)
                 .contentShape(Rectangle())
         }.buttonStyle(.plain).accessibilityLabel("搜索").accessibilityIdentifier("local.search")
             .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
-    private func pushButton(width: CGFloat) -> some View {
+    private func pushButton(width: CGFloat, hitWidth: CGFloat) -> some View {
         let selected = current == .push
         let color = dockColor(.push)
         return Button {
@@ -389,6 +396,7 @@ struct LocalAppNavigation: View {
                 .font(.system(size: 19, weight: .semibold)).frame(width: width, height: LocalDockLayout.controlHeight)
                 .foregroundStyle(selected ? color : .primary)
                 .background(selected ? color.opacity(0.16) : .clear, in: Capsule())
+                .frame(width: hitWidth, height: LocalDockLayout.dockHeight)
                 .contentShape(Rectangle())
         }.buttonStyle(.plain).accessibilityLabel("推送").accessibilityIdentifier("local.push")
             .accessibilityAddTraits(selected ? .isSelected : [])
