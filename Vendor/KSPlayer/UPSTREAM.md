@@ -19,3 +19,24 @@ Local extension KSOptions.onVideoDecoderChanged reports actual VideoToolbox/FFmp
 FFmpeg frames refine software versus VideoToolbox-backed output. KSMEPlayer exposes playbackCommand
 and seekCommand so system PiP actions use the application's serialized playback controls.
 
+## Recovery status (2026-11-18)
+
+The source directory was absent from the published Git tree. A 60-file baseline was restored from
+`fei256/tvbox-silicon` branch `iOS16.2-NoJava` at commit
+`034784cf45b0bc45ea9420baef89f4802940fed0`. Against `SOURCE-MANIFEST.json`, 35 files match
+the published SHA-256 values and 25 differ; the differing files are not claimed to reproduce the
+published snapshot. The two DisplayCriteria files are included in the same comparison.
+
+Fourteen files listed by the manifest are absent from that public branch and remain unrecovered:
+`MEPlayer/DolbyVisionInlineConverter.swift`, `MEPlayer/DolbyVisionLayerProbe.swift`,
+`MEPlayer/DolbyVisionPacketPairer.swift`, `MEPlayer/DolbyVisionRPUConverter.swift`,
+`MEPlayer/MEPlaybackSource.swift`, `MEPlayer/PlaybackInputIO.swift`,
+`MEPlayer/VideoDisplayCadence.swift`, `MEPlayer/VideoNALFormat.swift`,
+`MEPlayer/VideoOnlyPlaybackClock.swift`, `Metal/MetalDrawableAcquisition.swift`,
+`Metal/MetalFrameSubmissionGate.swift`, `Metal/VideoColorMetadata.swift`,
+`Metal/YUVColorConversion.swift`, and `Subtitle/ASSAnimation.swift`.
+
+The app directly references `ASSAnimation`, `KSOptions.onVideoDecoderChanged`, and the
+`KSMEPlayer.playbackCommand`/`seekCommand` callbacks. These interfaces and the missing source
+modules must be reconstructed and validated before this checkout can produce a complete IPA.
+
