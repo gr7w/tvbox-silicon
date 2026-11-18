@@ -550,11 +550,11 @@ extension KSMEPlayer: AVPlaybackCoordinatorPlaybackControlDelegate {
         }
     }
 
-    public func playbackCoordinator(_: AVDelegatingPlaybackCoordinator, didIssue seekCommand: AVDelegatingPlaybackCoordinatorSeekCommand) async {
-        guard seekCommand.expectedCurrentItemIdentifier == (playbackCoordinator as? AVDelegatingPlaybackCoordinator)?.currentItemIdentifier else {
+    public func playbackCoordinator(_: AVDelegatingPlaybackCoordinator, didIssue command: AVDelegatingPlaybackCoordinatorSeekCommand) async {
+        guard command.expectedCurrentItemIdentifier == (playbackCoordinator as? AVDelegatingPlaybackCoordinator)?.currentItemIdentifier else {
             return
         }
-        let seekTime = fmod(seekCommand.itemTime.seconds, duration)
+        let seekTime = fmod(command.itemTime.seconds, duration)
         if abs(currentPlaybackTime - seekTime) < CGFLOAT_EPSILON {
             return
         }
