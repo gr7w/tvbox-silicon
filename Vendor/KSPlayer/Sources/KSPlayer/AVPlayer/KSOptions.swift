@@ -16,6 +16,8 @@ import UIKit
 #endif
 open class KSOptions {
     public var onVideoDecoderChanged: (@Sendable (String) -> Void)?
+    public var onVideoDecoderFailed: (@Sendable (String) -> Void)?
+    public var onVideoDecoderError: (@Sendable (Error) -> Void)?
     /// 最低缓存视频时间
     @Published
     public var preferredForwardBufferDuration = KSOptions.preferredForwardBufferDuration

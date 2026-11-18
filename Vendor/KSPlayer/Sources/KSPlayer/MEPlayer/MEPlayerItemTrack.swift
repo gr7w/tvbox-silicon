@@ -306,8 +306,12 @@ extension SyncPlayerItemTrack {
                 if mediaType == .video, options.asynchronousDecompression, options.hardwareDecode,
                    let session = DecompressionSession(assetTrack: assetTrack, options: options)
                 {
+                    options.onVideoDecoderChanged?("VideoToolbox")
                     return VideoToolboxDecode(options: options, session: session)
                 } else {
+                    if mediaType == .video {
+                        options.onVideoDecoderChanged?("FFmpeg software")
+                    }
                     return FFmpegDecode(assetTrack: assetTrack, options: options)
                 }
             }
